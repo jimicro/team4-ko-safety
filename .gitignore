@@ -1,0 +1,51 @@
+# ── Secrets — 절대 커밋 금지 ───────────────────────────────────────
+.env
+.env.local
+.env.*.local
+*.key
+*.pem
+
+# ── Python ────────────────────────────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+.venv/
+venv/
+env/
+.ipynb_checkpoints/
+*.egg-info/
+dist/
+build/
+
+# ── 실험 산출물 (재현 가능, 용량 큼) ─────────────────────────────
+results/runs/*.jsonl
+results/smoke/*.json
+results/pilot_*.jsonl
+results/feedback_buffer.jsonl
+results/figures/*.png
+results/summary.json
+results/annotation.jsonl
+
+# AI 자율 생성 시드는 재현 가능하므로 제외 (사람 시드 seeds.json 만 공개)
+data/seeds_ai_generated.json
+
+# ── IDE / OS ──────────────────────────────────────────────────────
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── LangSmith / 기타 ──────────────────────────────────────────────
+.langsmith/
+
+# ── Claude Code 로컬 설정 (개인 환경) ─────────────────────────────
+.claude/
+
+# ── 임시 작업 파일 ────────────────────────────────────────────────
+*.log
+*.tmp
+*.bak
+_devguide.txt
