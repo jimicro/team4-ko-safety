@@ -1,4 +1,4 @@
-# ── Secrets — 절대 커밋 금지 ───────────────────────────────────────
+# ── Secrets — 절대 커밋 금지 (Private repo 라도 마찬가지) ──────────
 .env
 .env.local
 .env.*.local
@@ -19,18 +19,6 @@ env/
 dist/
 build/
 
-# ── 실험 산출물 (재현 가능, 용량 큼) ─────────────────────────────
-results/runs/*.jsonl
-results/smoke/*.json
-results/pilot_*.jsonl
-results/feedback_buffer.jsonl
-results/figures/*.png
-results/summary.json
-results/annotation.jsonl
-
-# AI 자율 생성 시드는 재현 가능하므로 제외 (사람 시드 seeds.json 만 공개)
-data/seeds_ai_generated.json
-
 # ── IDE / OS ──────────────────────────────────────────────────────
 .idea/
 .vscode/
@@ -49,3 +37,8 @@ desktop.ini
 *.tmp
 *.bak
 _devguide.txt
+
+# ── 협업 정책 (Private repo) ──────────────────────────────────────
+# 본 저장소는 팀 내부 협업용 Private repo 입니다.
+# 실험 산출물 (results/, AI 시드) 은 *포함*하여 팀원 간 공유합니다.
+# 향후 Public 전환 시 docs/06 + docs/07 의 Redaction 정책 적용 필요.
