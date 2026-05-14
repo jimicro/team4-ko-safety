@@ -61,6 +61,7 @@ TEAM4/
 │   └── aggregator.py        # 피드백 누적·로딩
 │
 ├── scripts/
+│   ├── smoke_test.py        # 단건 라운드 검증 (--seed-id, --defender-mode 등)
 │   └── generate_seeds_ai.py # AI 자율 시드 생성 (카테고리당 90개)
 │
 ├── data/

@@ -1,11 +1,12 @@
 """Pilot experiments BEFORE the main 600-round sweep.
 
-1) Turn-budget sweep:  5 / 10 / 15 turns × 30 rounds (10 per category) → which
+1) Turn-budget sweep:  3 / 6 / 9 turns × 30 rounds (10 per category) → which
                        max_turns gives the most informative ASR/breakthrough
-                       distribution?
+                       distribution? (본 실험 채택값 6턴의 half/×1/×1.5)
 2) Single-turn baseline: same 30 seeds sent as 1-turn → ASR vs multi-turn.
 
-Results: results/pilot_turn_sweep.jsonl, results/pilot_singleturn.jsonl
+Results: results/pilot_turn_sweep_{A|B}[_{mode}].jsonl,
+         results/pilot_singleturn_{A|B}[_{mode}].jsonl
 """
 from __future__ import annotations
 
