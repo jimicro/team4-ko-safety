@@ -69,7 +69,14 @@
 ```
 
 ### 2.3 라운드 로그 (results/runs/*.jsonl)
-JSON Lines, 한 라운드 = 한 행.
+
+파일명 규칙:
+- `{experiment}_{category}.jsonl` — Defender vanilla (기본, 본 실험)
+- `{experiment}_{category}_aware.jsonl` — Defender aware (ablation)
+- `{experiment}_{category}_safe.jsonl` — Defender safe (선택)
+- `{experiment}_normal[_{mode}].jsonl` — 정상 프롬프트 FPR 측정
+
+JSON Lines, 한 라운드 = 한 행:
 ```json
 {
   "round_id": 42,
@@ -80,6 +87,7 @@ JSON Lines, 한 라운드 = 한 행.
   "seed_prompt": "...",
   "target_content": "...",
   "domain": "마약",
+  "defender_mode": "vanilla",
   "max_turns": 6,
   "current_turn": 7,
   "conversation_history": [

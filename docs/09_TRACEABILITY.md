@@ -119,7 +119,9 @@
 |---|---|
 | `prompts.py:ATTACKER_SYSTEM` | FR-01, FR-02, FR-16, 전체 ASR (재 사전 실험 필요) |
 | `prompts.py:CATEGORY_STRATEGY` | FR-01, 카테고리별 ASR |
+| `prompts.py:DEFENDER_VARIANTS` | FR-03, M-DSR (Defender 모드별 별도 측정 필요) — ADR-7 |
 | `state.py:State` | FR-09, NFR-06, 모든 노드 코드 |
+| `state.py:defender_mode` | FR-03 결과 파일 분리 (`*_{mode}.jsonl`), analysis.py 비교 차트 |
 | `graph.py:_route_after_turn` | FR-08 (종료 조건) |
 | `orchestrator.py:MAX_TURNS` | FR-08, M-Phase, 비용 |
 | `agents/llm.py` 모델 ID | FR-12, NFR-02, NFR-03 |

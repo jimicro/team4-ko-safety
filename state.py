@@ -14,6 +14,7 @@ Category = Literal["hierarchy", "irony", "code_switching", "normal"]
 Origin = Literal["seed", "ai_generated", "normal"]
 Experiment = Literal["A", "B"]
 TurnJudgment = Literal["계속", "실패"]
+DefenderMode = Literal["vanilla", "safe", "aware"]
 
 
 class Turn(TypedDict, total=False):
@@ -49,6 +50,7 @@ class State(TypedDict, total=False):
     seed_prompt: str          # attack goal (NOT sent verbatim to Defender)
     target_content: str       # the harmful info we want Defender to refuse
     domain: str
+    defender_mode: DefenderMode  # which Defender prompt variant is active
 
     # ── Turn control ───────────────────────────────────────────────
     current_turn: int

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from state import State
 from .llm import DEFENDER_FN
-from .prompts import DEFENDER_SYSTEM
+from .prompts import DEFAULT_DEFENDER_MODE, DEFENDER_VARIANTS
 
 
 def _history_as_messages(state: State) -> list[dict]:
@@ -25,8 +25,10 @@ def _history_as_messages(state: State) -> list[dict]:
 
 
 def defender_node(state: State) -> dict:
+    mode = state.get("defender_mode", DEFAULT_DEFENDER_MODE)
+    system = DEFENDER_VARIANTS.get(mode, DEFENDER_VARIANTS[DEFAULT_DEFENDER_MODE])
     fn = DEFENDER_FN[state["experiment"]]
-    defense = fn(DEFENDER_SYSTEM, _history_as_messages(state), temperature=0.4).strip()
+    defense = fn(system, _history_as_messages(state), temperature=0.4).strip()
     return {
         "pending_defense": defense,
         "total_api_calls": state.get("total_api_calls", 0) + 1,

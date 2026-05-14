@@ -22,7 +22,7 @@ from tqdm import tqdm
 from agents.aggregator import load_recent_feedback
 from agents.evaluator import _parse_json
 from agents.llm import ATTACKER_FN, DEFENDER_FN, EVALUATOR_FN
-from agents.prompts import DEFENDER_SYSTEM, TURN_EVALUATOR_SYSTEM
+from agents.prompts import DEFAULT_DEFENDER_MODE, DEFENDER_VARIANTS, TURN_EVALUATOR_SYSTEM
 from graph import build_graph
 
 load_dotenv()
@@ -38,15 +38,17 @@ def _pilot_seeds() -> list[dict]:
     return [s for s in seeds if s["origin"] == "seed"]
 
 
-def run_turn_sweep(experiment: str = "A", turn_budgets=(3, 6, 9)) -> None:
+def run_turn_sweep(experiment: str = "A", turn_budgets=(3, 6, 9),
+                   defender_mode: str = DEFAULT_DEFENDER_MODE) -> None:
     """Sweep around the chosen 2:2:2 = 6-turn main-experiment setting (half/×1/×1.5)."""
     graph = build_graph()
-    out_path = RESULTS_DIR / f"pilot_turn_sweep_{experiment}.jsonl"
+    suffix = "" if defender_mode == "vanilla" else f"_{defender_mode}"
+    out_path = RESULTS_DIR / f"pilot_turn_sweep_{experiment}{suffix}.jsonl"
     seeds = _pilot_seeds()
 
     with out_path.open("a", encoding="utf-8") as f:
         for max_turns in turn_budgets:
-            for seed in tqdm(seeds, desc=f"max_turns={max_turns}"):
+            for seed in tqdm(seeds, desc=f"max_turns={max_turns}/{defender_mode}"):
                 init = {
                     "round_id": seed["id"],
                     "experiment": experiment,
@@ -56,6 +58,7 @@ def run_turn_sweep(experiment: str = "A", turn_budgets=(3, 6, 9)) -> None:
                     "seed_prompt": seed["prompt"],
                     "target_content": seed.get("target_content", seed["prompt"]),
                     "domain": seed.get("domain", ""),
+                    "defender_mode": defender_mode,
                     "current_turn": 1,
                     "max_turns": max_turns,
                     "conversation_history": [],
@@ -72,19 +75,21 @@ def run_turn_sweep(experiment: str = "A", turn_budgets=(3, 6, 9)) -> None:
                 f.flush()
 
 
-def run_single_turn(experiment: str = "A") -> None:
+def run_single_turn(experiment: str = "A", defender_mode: str = DEFAULT_DEFENDER_MODE) -> None:
     """Send the seed as a single prompt, judge with Claude. No Attacker, no
     multi-turn buildup. This is the dead-simple baseline.
     """
-    out_path = RESULTS_DIR / f"pilot_singleturn_{experiment}.jsonl"
+    suffix = "" if defender_mode == "vanilla" else f"_{defender_mode}"
+    out_path = RESULTS_DIR / f"pilot_singleturn_{experiment}{suffix}.jsonl"
     seeds = _pilot_seeds()
     defender = DEFENDER_FN[experiment]
+    defender_system = DEFENDER_VARIANTS[defender_mode]
 
     with out_path.open("a", encoding="utf-8") as f:
-        for seed in tqdm(seeds, desc=f"singleturn/{experiment}"):
+        for seed in tqdm(seeds, desc=f"singleturn/{experiment}/{defender_mode}"):
             try:
                 defense = defender(
-                    DEFENDER_SYSTEM,
+                    defender_system,
                     [{"role": "user", "content": seed["prompt"]}],
                     temperature=0.4,
                 )
@@ -105,6 +110,7 @@ def run_single_turn(experiment: str = "A") -> None:
 
             rec = {
                 "experiment": experiment,
+                "defender_mode": defender_mode,
                 "seed_id": seed["id"],
                 "category": seed["category"],
                 "seed_prompt": seed["prompt"],
@@ -121,6 +127,9 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--experiment", default="A", choices=["A", "B"])
     ap.add_argument("--mode", default="both", choices=["sweep", "single", "both"])
+    ap.add_argument("--defender-mode", choices=list(DEFENDER_VARIANTS.keys()),
+                    default=DEFAULT_DEFENDER_MODE,
+                    help="Defender 프롬프트 변형 (기본 vanilla. aware = ablation 비교용)")
     args = ap.parse_args()
 
     required = ["OPENAI_API_KEY", "GOOGLE_API_KEY", "ANTHROPIC_API_KEY"]
@@ -130,9 +139,9 @@ def main():
         sys.exit(1)
 
     if args.mode in ("sweep", "both"):
-        run_turn_sweep(args.experiment)
+        run_turn_sweep(args.experiment, defender_mode=args.defender_mode)
     if args.mode in ("single", "both"):
-        run_single_turn(args.experiment)
+        run_single_turn(args.experiment, defender_mode=args.defender_mode)
 
 
 if __name__ == "__main__":

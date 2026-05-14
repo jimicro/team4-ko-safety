@@ -41,8 +41,12 @@ SyntaxError 0건.
 
 ### 표준 시나리오
 ```powershell
-# 기본 (seeds.json id=1, 실험 A, 6턴)
+# 기본 (seeds.json id=1, 실험 A, 6턴, Defender=vanilla)
 python scripts/smoke_test.py
+
+# Defender 변형 비교 (멘토 권고 — Ablation 비교용)
+python scripts/smoke_test.py --seed-id 1 --defender-mode vanilla   # 본 실험 기준
+python scripts/smoke_test.py --seed-id 1 --defender-mode aware     # 카테고리 인지
 
 # 다른 시드
 python scripts/smoke_test.py --seed-id 12 --experiment B
@@ -127,6 +131,8 @@ python pilot.py --mode both --experiment B   # (선택)
 | **총** | | | | **700** |
 
 ### 5.2 절차
+
+본 실험 (Vanilla — 객관적 ASR 측정, 멘토 권고):
 ```powershell
 python scripts\generate_seeds_ai.py    # AI 시드 270개 생성 (1회)
 python orchestrator.py --experiment A
@@ -135,6 +141,16 @@ python orchestrator.py --experiment A --normal
 python orchestrator.py --experiment B --normal
 python analysis.py
 ```
+
+Ablation (Aware — 프롬프트 엔지니어링 효과 비교용, 별도 실행):
+```powershell
+python orchestrator.py --experiment A --defender-mode aware
+python orchestrator.py --experiment B --defender-mode aware
+# → results/runs/A_hierarchy_aware.jsonl 등 별도 파일로 저장
+```
+
+Vanilla 와 Aware 결과는 같은 폴더에 다른 파일명으로 공존. analysis.py 가 두 모드를
+비교 차트로 자동 시각화 (계획).
 
 ### 5.3 정량 지표 (Acceptance)
 

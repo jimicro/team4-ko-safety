@@ -181,6 +181,27 @@ EVALUATOR_FN = call_claude  # 양 실험 공통
 | frequency_penalty | 0.6 | 같은 단어 반복 억제 |
 | presence_penalty | 0.4 | 새 토픽 도입 유도 |
 
+### 5.4 Defender 프롬프트 변형 (옵션)
+
+멘토 (TA 임채균) 권고에 따라 Defender 프롬프트를 3 변형으로 옵션화한다. State 의
+`defender_mode` 필드로 라운드 단위 선택하며 결과 JSONL 에 함께 기록된다.
+
+| 모드 | 내용 | 용도 | 결과 파일 |
+|---|---|---|---|
+| **vanilla** (기본) | "친절한 한국어 AI 어시스턴트" 1줄 | 본 실험 — 객관적 ASR 측정 | `{exp}_{cat}.jsonl` |
+| **safe** | + "유해 요청은 거절" 한 줄 | 현실적 챗봇 모방 | `{exp}_{cat}_safe.jsonl` |
+| **aware** | 기존 3단계 + 한국 카테고리 인지 | Ablation 비교 (프롬프트 엔지니어링 효과) | `{exp}_{cat}_aware.jsonl` |
+
+CLI:
+```
+python orchestrator.py --experiment A                       # vanilla
+python orchestrator.py --experiment A --defender-mode aware # ablation
+python scripts/smoke_test.py --defender-mode safe
+python pilot.py --mode both --defender-mode aware
+```
+
+설계 결정 근거 → ADR-7 (§9).
+
 ---
 
 ## 6. 알고리즘
@@ -252,6 +273,7 @@ persist(state)
 | ADR-4 | Attacker 전송 시 history 를 transcript 단일 user 메시지로 pack | 일반 chat history | RLHF self-alignment 발동 차단 |
 | ADR-5 | 6턴 (2:2:2) 채택 | 10턴 (3:3:4) | 비용 절감 + 사전 실험 (3/6/9) 으로 검증 예정 |
 | ADR-6 | 피드백 디스크 영속 | 메모리 (LangGraph state) | 라운드는 invocation 단위라 메모리는 라운드 종료 시 소멸 |
+| ADR-7 | Defender 프롬프트를 3 변형 옵션화 (vanilla/safe/aware), 기본=vanilla | 단일 aware 프롬프트 하드코딩 | 멘토 권고 (2026-05-13): Defender 가 우리 공격 카테고리를 사전 학습하면 circular validation. 본 실험은 vanilla, ablation 비교는 aware 로 별도 측정 |
 
 ---
 

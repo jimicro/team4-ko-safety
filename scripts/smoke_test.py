@@ -118,6 +118,7 @@ def _build_init(args) -> dict:
         "seed_prompt": seed["prompt"],
         "target_content": seed.get("target_content", seed["prompt"]),
         "domain": seed.get("domain", ""),
+        "defender_mode": args.defender_mode,
         "current_turn": 1,
         "max_turns": args.max_turns,
         "conversation_history": [],
@@ -164,7 +165,7 @@ def _summary_table(result: dict, elapsed: float) -> str:
         "═" * 70,
         f" 단건 라운드 결과 — {elapsed:.1f}s · API calls={result.get('total_api_calls', '?')}",
         "═" * 70,
-        f" 시나리오  : {result['category']}  ·  실험 {result['experiment']}  ·  domain={result.get('domain','')}",
+        f" 시나리오  : {result['category']}  ·  실험 {result['experiment']}  ·  Defender={result.get('defender_mode','vanilla')}  ·  domain={result.get('domain','')}",
         f" 시드 ID  : {result.get('seed_id', '?')}",
         f" Target  : {result.get('target_content', '')[:90]}",
         "─" * 70,
@@ -211,6 +212,9 @@ def main():
     ap.add_argument("--experiment", choices=["A", "B"], default="A",
                     help="A: Attacker=GPT, Defender=Gemini · B: 역할 교환")
     ap.add_argument("--max-turns", type=int, default=6, help="최대 턴 수 (기본 6)")
+    ap.add_argument("--defender-mode", choices=["vanilla", "safe", "aware"], default="vanilla",
+                    help="Defender 프롬프트 변형 (기본 vanilla — 본 실험 객관적 측정용. "
+                         "aware = 우리 카테고리 인지, ablation 비교용)")
     ap.add_argument("--no-dialogue", action="store_true",
                     help="대화 전문 출력 생략 (요약만)")
     ap.add_argument("--truncate", type=int, default=300,
@@ -228,7 +232,7 @@ def main():
     args = ap.parse_args()
     init = _build_init(args)
 
-    print(f"▶ 시작 — {init['category']} · 실험 {init['experiment']} · 최대 {init['max_turns']}턴")
+    print(f"▶ 시작 — {init['category']} · 실험 {init['experiment']} · Defender={init['defender_mode']} · 최대 {init['max_turns']}턴")
     print(f"  Target: {init['target_content'][:80]}")
     print(f"  Seed prompt: {init['seed_prompt'][:80]}")
     print()

@@ -22,7 +22,7 @@ from tqdm import tqdm
 from agents.aggregator import load_recent_feedback
 from agents.defender import defender_node
 from agents.llm import DEFENDER_FN
-from agents.prompts import DEFENDER_SYSTEM
+from agents.prompts import DEFAULT_DEFENDER_MODE, DEFENDER_VARIANTS
 from graph import build_graph
 
 load_dotenv()
@@ -60,14 +60,16 @@ def _run_one_round(graph, init: dict) -> dict:
     return graph.invoke(init, {"recursion_limit": 60})
 
 
-def run_adversarial(experiment: str) -> None:
+def run_adversarial(experiment: str, defender_mode: str = "vanilla") -> None:
     graph = build_graph()
+    # 결과 파일명에 defender_mode 포함 → vanilla/aware 모두 같은 폴더에 공존 가능
+    suffix = "" if defender_mode == "vanilla" else f"_{defender_mode}"
     for category in CATEGORIES:
-        out_path = RUNS_DIR / f"{experiment}_{category}.jsonl"
+        out_path = RUNS_DIR / f"{experiment}_{category}{suffix}.jsonl"
         seeds = _seeds_for(category, ROUNDS_PER_CATEGORY)
 
         with out_path.open("a", encoding="utf-8") as f:
-            for i, seed in enumerate(tqdm(seeds, desc=f"{experiment}/{category}")):
+            for i, seed in enumerate(tqdm(seeds, desc=f"{experiment}/{category}/{defender_mode}")):
                 round_id = i + 1
                 init = {
                     "round_id": round_id,
@@ -78,6 +80,7 @@ def run_adversarial(experiment: str) -> None:
                     "seed_prompt": seed["prompt"],
                     "target_content": seed.get("target_content", seed["prompt"]),
                     "domain": seed.get("domain", ""),
+                    "defender_mode": defender_mode,
                     "current_turn": 1,
                     "max_turns": MAX_TURNS,
                     "conversation_history": [],
@@ -93,24 +96,27 @@ def run_adversarial(experiment: str) -> None:
                 f.flush()
 
 
-def run_normal(experiment: str) -> None:
+def run_normal(experiment: str, defender_mode: str = "vanilla") -> None:
     """FPR test — Defender alone faces normal prompts.
 
     No multi-turn, no Attacker, no Evaluator JSON judgment: we just record the
     Defender's reply and a coarse refused/answered tag (analysis.py refines).
     """
-    out_path = RUNS_DIR / f"{experiment}_normal.jsonl"
+    suffix = "" if defender_mode == "vanilla" else f"_{defender_mode}"
+    out_path = RUNS_DIR / f"{experiment}_normal{suffix}.jsonl"
     prompts = json.loads(NORMAL_PATH.read_text(encoding="utf-8"))
     fn = DEFENDER_FN[experiment]
+    system = DEFENDER_VARIANTS[defender_mode]
 
     with out_path.open("a", encoding="utf-8") as f:
-        for p in tqdm(prompts, desc=f"{experiment}/normal"):
+        for p in tqdm(prompts, desc=f"{experiment}/normal/{defender_mode}"):
             try:
-                reply = fn(DEFENDER_SYSTEM, [{"role": "user", "content": p["prompt"]}], temperature=0.4)
+                reply = fn(system, [{"role": "user", "content": p["prompt"]}], temperature=0.4)
             except Exception as e:
                 reply = f"[ERROR: {type(e).__name__}: {e}]"
             rec = {
                 "experiment": experiment,
+                "defender_mode": defender_mode,
                 "prompt_id": p["id"],
                 "domain": p.get("domain", ""),
                 "prompt": p["prompt"],
@@ -125,6 +131,11 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--experiment", choices=["A", "B"], required=True)
     ap.add_argument("--normal", action="store_true", help="run the 50-prompt over-refusal test instead")
+    ap.add_argument("--defender-mode", choices=list(DEFENDER_VARIANTS.keys()),
+                    default=DEFAULT_DEFENDER_MODE,
+                    help="Defender 프롬프트 변형 (기본 vanilla — 본 실험 객관적 측정용. "
+                         "aware = 우리 카테고리 인지, ablation 비교용. "
+                         "결과는 results/runs/{exp}_{cat}[_mode].jsonl 로 분리 저장)")
     args = ap.parse_args()
 
     required = ["OPENAI_API_KEY", "GOOGLE_API_KEY", "ANTHROPIC_API_KEY"]
@@ -134,9 +145,9 @@ def main():
         sys.exit(1)
 
     if args.normal:
-        run_normal(args.experiment)
+        run_normal(args.experiment, args.defender_mode)
     else:
-        run_adversarial(args.experiment)
+        run_adversarial(args.experiment, args.defender_mode)
 
 
 if __name__ == "__main__":

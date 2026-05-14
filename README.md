@@ -75,17 +75,22 @@ pip install -r requirements.txt
 copy .env.example .env  # 그 다음 API 키 채우기
 
 # 0. 단건 스모크 테스트 (코드 변경 시 가장 먼저)
-python scripts/smoke_test.py                 # 기본 (id=1, 실험 A, 6턴)
-python scripts/smoke_test.py --help          # 옵션 전체
+python scripts/smoke_test.py                                # 기본 (id=1, A, 6턴, Defender=vanilla)
+python scripts/smoke_test.py --defender-mode aware          # Ablation 비교
+python scripts/smoke_test.py --help                         # 옵션 전체
 
 # 1. 사전 실험 (3/6/9턴 + 싱글턴 대조)
 python pilot.py --mode both
 
-# 2. 본 실험 (700 라운드 양방향)
+# 2. 본 실험 (700 라운드 양방향, Defender=vanilla)
 python orchestrator.py --experiment A
 python orchestrator.py --experiment B
 python orchestrator.py --experiment A --normal
 python orchestrator.py --experiment B --normal
+
+# 2-Ablation. Defender 프롬프트 엔지니어링 효과 비교 (멘토 권고)
+python orchestrator.py --experiment A --defender-mode aware
+python orchestrator.py --experiment B --defender-mode aware
 
 # 3. 분석 + 차트
 python analysis.py
