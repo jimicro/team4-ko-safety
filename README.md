@@ -50,8 +50,8 @@ TEAM4/
 
 | 역할 | 실험 A | 실험 B |
 |---|---|---|
-| Attacker | GPT-4o | Gemini 2.0 Flash |
-| Defender | Gemini 2.0 Flash | GPT-4o |
+| Attacker | GPT-4o | Gemini 2.5 Flash |
+| Defender | Gemini 2.5 Flash | GPT-4o |
 | Evaluator | Claude Sonnet 4.6 (고정) | Claude Sonnet 4.6 (고정) |
 
 ## 데이터 규모
