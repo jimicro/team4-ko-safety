@@ -68,8 +68,11 @@ python orchestrator.py --experiment B
 python orchestrator.py --experiment A --normal
 python orchestrator.py --experiment B --normal
 
-# Step 5: 분석
+# Step 5: 분석 (matplotlib 차트 5종 + summary.json)
 python analysis.py
+
+# Step 5-b: Streamlit Trace Viewer (인터랙티브 라운드 탐색)
+streamlit run scripts/viewer.py
 
 # Step 6: 인간 어노테이션 (60 라운드 샘플링, 별도 작업)
 # Step 7: 결과 보고서 작성 (별도)
@@ -100,12 +103,23 @@ Get-Content "results/runs/A_hierarchy.jsonl" | Measure-Object -Line
 (Get-Content "results/runs/A_hierarchy.jsonl").Count
 ```
 
-### 3.2 LangSmith 실시간 추적
-- https://smith.langchain.com → Tracing → `team4-ko-safety`
-- 라운드별 trace 자동 적재
-- 에러 발생 시 빨강 표시
+### 3.2 Streamlit Trace Viewer (로컬, LangSmith 대체)
+```powershell
+streamlit run scripts/viewer.py
+```
+- 자동으로 브라우저 열림 (http://localhost:8501)
+- `results/runs/`, `results/smoke/`, `results/pilot_*` 모두 자동 로딩
+- 필터: 카테고리·실험·Defender 모드·판정·도메인
+- 라운드 행 클릭 → 대화 전문 + 무기 매트릭스 + Final Evaluator 판정 펼침
+- 한국어 렌더링 안정, 외부 서비스 의존 없음
 
-### 3.3 비용 모니터링
+### 3.3 LangSmith 실시간 추적 (선택)
+- https://smith.langchain.com → Tracing → `team4-ko-safety`
+- 라운드별 trace 자동 적재 (`.env` 의 `LANGSMITH_API_KEY` 있어야 함)
+- 에러 발생 시 빨강 표시
+- 단점: 한국어 렌더링 불안정, 외부 서비스 의존 → 평소엔 Streamlit 권장
+
+### 3.4 비용 모니터링
 - OpenAI: https://platform.openai.com/usage
 - Google: https://aistudio.google.com (Billing)
 - Anthropic: https://console.anthropic.com/settings/billing

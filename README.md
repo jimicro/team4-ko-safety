@@ -119,8 +119,21 @@ python orchestrator.py --experiment B --normal
 python orchestrator.py --experiment A --defender-mode aware
 python orchestrator.py --experiment B --defender-mode aware
 
-# 3. 분석 + 차트
+# 3. 분석 + 차트 (matplotlib PNG 5종)
 python analysis.py
+
+# 4. 인터랙티브 Trace Viewer (LangSmith 대체, 로컬 브라우저)
+streamlit run scripts/viewer.py
+# → http://localhost:8501 자동 열림
+# → 라운드 검색·필터·대화 펼치기·무기 다양성 시각화
 ```
 
 자세한 절차는 [docs/08_OPERATIONS.md](docs/08_OPERATIONS.md), 검증 절차는 [docs/03_TEST_PLAN.md](docs/03_TEST_PLAN.md) 참조.
+
+## 시각화 도구
+
+| 도구 | 용도 | 실행 |
+|---|---|---|
+| **Streamlit Trace Viewer** | 라운드 단위 대화 탐색 (LangSmith 대체) | `streamlit run scripts/viewer.py` |
+| **matplotlib 차트 5종** | 보고서·발표용 정적 PNG | `python analysis.py` |
+| **(선택) LangSmith** | 실시간 모델 호출 추적 | `.env` 의 `LANGSMITH_API_KEY` 설정 시 자동 |

@@ -15,6 +15,8 @@ from collections import defaultdict
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+import matplotlib as mpl
+from matplotlib import font_manager
 import pandas as pd
 import seaborn as sns
 
@@ -24,6 +26,40 @@ FIG_DIR.mkdir(parents=True, exist_ok=True)
 
 CATEGORIES = ["hierarchy", "irony", "code_switching"]
 EXPERIMENTS = ["A", "B"]
+
+# ── 한글 폰트 설정 (matplotlib 의 한글 깨짐 방지) ──────────────────────
+# 시스템에 존재하는 폰트 중 한국어 친화 폰트 우선순위로 시도.
+_KOREAN_FONT_CANDIDATES = [
+    "Malgun Gothic",      # Windows 기본
+    "AppleGothic",        # macOS
+    "NanumGothic",        # 나눔 (Linux 흔함)
+    "Noto Sans CJK KR",   # Google
+    "Noto Sans KR",
+    "Source Han Sans KR",
+]
+
+
+def _pick_korean_font() -> str:
+    available = {f.name for f in font_manager.fontManager.ttflist}
+    for cand in _KOREAN_FONT_CANDIDATES:
+        if cand in available:
+            return cand
+    return "DejaVu Sans"  # fallback (한글 깨질 수 있음)
+
+
+_FONT = _pick_korean_font()
+mpl.rcParams["font.family"] = _FONT
+mpl.rcParams["axes.unicode_minus"] = False  # 음수 부호 깨짐 방지
+sns.set_theme(style="whitegrid", palette="colorblind", font=_FONT)
+
+# ── 카테고리·실험·판정 색 통일 (모든 차트 공통) ─────────────────────
+CATEGORY_COLOR = {
+    "hierarchy":       "#3b82f6",   # blue
+    "irony":           "#f97316",   # orange
+    "code_switching":  "#10b981",   # emerald
+}
+EXPERIMENT_COLOR = {"A": "#6366f1", "B": "#ec4899"}  # indigo / pink
+VERDICT_COLOR = {"방어 성공": "#10b981", "방어 실패": "#ef4444"}
 
 # Heuristic refusal classifier for the over-refusal test set.
 REFUSAL_PATTERNS = [
