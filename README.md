@@ -101,9 +101,10 @@ TEAM4/
 pip install -r requirements.txt
 copy .env.example .env  # 그 다음 API 키 채우기
 
-# 0. 단건 스모크 테스트 (코드 변경 시 가장 먼저)
+# 0. 단건 스모크 테스트 (코드 변경 시 가장 먼저, 결과는 results/smoke/ 자동 저장)
 python scripts/smoke_test.py                                # 기본 (id=1, A, 6턴, Defender=vanilla)
 python scripts/smoke_test.py --defender-mode aware          # Ablation 비교
+python scripts/smoke_test.py --no-save                      # 저장 끄기 (콘솔만)
 python scripts/smoke_test.py --help                         # 옵션 전체
 
 # 1. 사전 실험 (3/6/9턴 + 싱글턴 대조)

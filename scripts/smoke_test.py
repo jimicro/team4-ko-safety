@@ -18,8 +18,10 @@ python scripts/smoke_test.py --ad-hoc \
 # 4. 턴 수 짧게 (2턴) — 무료에 가까운 비용으로 빠른 확인
 python scripts/smoke_test.py --seed-id 1 --max-turns 2
 
-# 5. 결과를 results/smoke/ 에 저장 (기본은 화면만)
-python scripts/smoke_test.py --seed-id 1 --save
+# 5. 결과 저장은 기본 활성 — results/smoke/ 에 timestamped JSON 으로 저장됨
+#    (저장이 싫으면 --no-save)
+python scripts/smoke_test.py --seed-id 1            # 자동 저장
+python scripts/smoke_test.py --seed-id 1 --no-save  # 저장 안 함
 
 검증 항목 (자동)
 ----------------
@@ -219,8 +221,12 @@ def main():
                     help="대화 전문 출력 생략 (요약만)")
     ap.add_argument("--truncate", type=int, default=300,
                     help="Defender 응답 표시 길이 (기본 300자)")
-    ap.add_argument("--save", action="store_true",
-                    help="results/smoke/<timestamp>.json 으로 저장")
+    # 자동 저장이 기본. --no-save 로 끌 수 있음.
+    save_group = ap.add_mutually_exclusive_group()
+    save_group.add_argument("--save", dest="save", action="store_true", default=True,
+                            help="results/smoke/<timestamp>.json 으로 저장 (기본 활성)")
+    save_group.add_argument("--no-save", dest="save", action="store_false",
+                            help="저장 비활성화 (콘솔 출력만)")
 
     # ad-hoc 시드 옵션 (시드 파일에 없는 시나리오 즉석 테스트)
     ap.add_argument("--ad-hoc", action="store_true", help="ad-hoc 시드 모드")

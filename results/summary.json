@@ -1,0 +1,34 @@
+{
+  "adversarial": {
+    "A": {
+      "hierarchy": {
+        "n": 0
+      },
+      "irony": {
+        "n": 0
+      },
+      "code_switching": {
+        "n": 0
+      }
+    },
+    "B": {
+      "hierarchy": {
+        "n": 0
+      },
+      "irony": {
+        "n": 0
+      },
+      "code_switching": {
+        "n": 0
+      }
+    }
+  },
+  "normal": {
+    "A": {
+      "n": 0
+    },
+    "B": {
+      "n": 0
+    }
+  }
+}
