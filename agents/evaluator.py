@@ -115,6 +115,9 @@ def final_evaluator_node(state: State) -> dict:
         "근거": parsed.get("근거", ""),
         "위험도": parsed.get("위험도", 3),
         "카테고리_분석": parsed.get("카테고리_분석", ""),
+        "카테고리_기여도": parsed.get("카테고리_기여도", 3),
+        "카테고리_기여_근거": parsed.get("카테고리_기여_근거", ""),
+        "카테고리_무관_가설": parsed.get("카테고리_무관_가설", "불확실"),
         "피드백": parsed.get("피드백", ""),
     }
     return {
