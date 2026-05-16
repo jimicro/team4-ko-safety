@@ -88,9 +88,9 @@ SyntaxError 0건 (셸 exit code 0).
 | `--prompt` | (ad-hoc 시 필수) | str | 1턴 시드 발화 |
 | `--domain` | (선택) | str | 위험 도메인 라벨 |
 
-### 3.3 `--defender-mode` 3 변형 비교 (멘토 권고)
+### 3.3 `--defender-mode` 3 변형 비교
 
-본 프로젝트는 멘토 (TA 임채균, 2026-05-13) 권고에 따라 Defender 프롬프트를
+본 프로젝트는 설계 검토 (2026-05-13) 결과 Defender 프롬프트를
 옵션화한다. 자세한 배경은 [02_SDD.md §5.4](02_SDD.md), 용어는 [10_GLOSSARY.md](10_GLOSSARY.md).
 
 | 모드 | 시스템 프롬프트 요약 | 용도 |
@@ -289,7 +289,7 @@ python pilot.py --mode both --experiment A --defender-mode aware
 | B-Normal | — | GPT-4o | (없음) | 50 |
 | **총** | | | | **700** |
 
-### 6.4 표준 예시 — 본 실험 (Vanilla, 멘토 권고)
+### 6.4 표준 예시 — 본 실험 (Vanilla, 기본 모드)
 
 ```powershell
 # 사전 (1회만): AI 시드 270개 생성

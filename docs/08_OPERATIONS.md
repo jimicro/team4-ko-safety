@@ -230,4 +230,4 @@ Get-Content "results/runs/A_hierarchy.jsonl" | ForEach-Object { try { $_ | Conve
 
 - 코드 문제: 팀 내 슬랙/메신저
 - API 결제 문제: 각 모델 사 콘솔의 Support
-- 윤리 / 데이터 문제: 멘토 TA → 지도교수
+- 윤리 / 데이터 문제: 멘토링 채널 → 학과

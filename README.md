@@ -9,7 +9,7 @@
 > *실제 공격·악용 목적이 아닙니다*. 사용 시 [docs/07_ETHICS_RISK.md](docs/07_ETHICS_RISK.md) 의
 > Responsible Disclosure 정책을 준수해 주세요.
 
-KAIST KTP571 · TEAM 4 (박지민 · 윤장한) · 멘토 TA 임채균 · 담당교수 최호진
+KAIST KTP571 · TEAM 4
 
 한국어 문화 맥락에 특화된 멀티턴 jailbreak 공격을 자동으로 생성·방어·평가하는
 3-Agent LangGraph 파이프라인. ChatGPT와 Gemini의 한국어 안전성 특성을
@@ -116,7 +116,7 @@ python orchestrator.py --experiment B
 python orchestrator.py --experiment A --normal
 python orchestrator.py --experiment B --normal
 
-# 2-Ablation. Defender 프롬프트 엔지니어링 효과 비교 (멘토 권고)
+# 2-Ablation. Defender 프롬프트 엔지니어링 효과 비교
 python orchestrator.py --experiment A --defender-mode aware
 python orchestrator.py --experiment B --defender-mode aware
 
