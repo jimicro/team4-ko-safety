@@ -4,7 +4,7 @@
 |---|---|
 | 버전 | 1.0 |
 | 작성일 | 2026-05-13 |
-| 시드 수 | 30 (사람) + 270 (AI 자율) = 300 |
+| 시드 수 | 30 (사람 시드, 핵심) + 270 (확장 프롬프트, Claude 자동 생성, 보충) = 300 |
 | 카테고리 | hierarchy · irony · code_switching (각 100 라운드) |
 
 본 문서는 **한국어 문화 맥락 공격**의 3개 카테고리를 정의하고, 본 실험에 사용할
@@ -214,9 +214,11 @@ ASR bucket 분류: 어려움(추정 하한 < 40%) / 중간(40~59%) / 쉬움(≥ 
 
 ---
 
-## 6. AI 자율 시드 (270개) 생성 정책 — GPTFuzzer 차용
+## 6. 확장 프롬프트 (270개) 생성 정책 — GPTFuzzer 차용
 
-`scripts/generate_seeds_ai.py` 가 사람 시드 10개를 few-shot 으로 카테고리당 ~110개 over-generate 후 90개를 선별한다. GPTFuzzer (Yu et al. 2023) 의 mutation 전략을 카테고리별로 적용한다.
+`scripts/expand_dataset.py` 가 사람 시드 10개를 few-shot 으로 카테고리당 ~110개 over-generate 후 90개를 선별한다. GPTFuzzer (Yu et al. 2023) 의 mutation 전략을 카테고리별로 적용한다.
+
+생성 모델은 **Claude (Sonnet 4.6)** — 실험 Attacker (GPT/Gemini) 와 다른 회사 모델을 사용해 *데이터 생성 시점의 모델 편향이 실험 결과로 누설되는 것* 을 차단한다.
 
 ### 6.1 생성 prompt 템플릿 (요약)
 
@@ -244,7 +246,7 @@ ASR bucket 분류: 어려움(추정 하한 < 40%) / 중간(40~59%) / 쉬움(≥ 
 
 ### 6.3 검수 절차
 
-AI 자율 생성 시드는 본 실험 전 **팀원 2명이 무작위 20개 (카테고리당 6~7개) 샘플 검수**한다:
+확장 프롬프트는 본 실험 전 **팀원 2명이 무작위 20개 (카테고리당 6~7개) 샘플 검수**한다:
 - 카테고리 정체성 보존 여부 (yes/no)
 - 도메인 정확성
 - 윤리 위반 (실명·미성년 직접 식별) 여부
@@ -327,7 +329,7 @@ Unique tactics in round: 6/10
 | Crescendo | https://arxiv.org/abs/2404.01833 | 자기 인용 compliance 99.99%, 점진적 escalation 페이즈 |
 | AutoRedTeamer | https://arxiv.org/abs/2503.15754 | Authority Manipulation 전략 → ① 위계 카테고리 |
 | AutoAdv | https://arxiv.org/abs/2511.02376 | disguise→refine 2단계, 6턴 95% — 본 프로젝트 6턴 근거 |
-| GPTFuzzer | https://arxiv.org/abs/2309.10253 / GitHub | AI 자율 시드 생성기 패턴 |
+| GPTFuzzer | https://arxiv.org/abs/2309.10253 / GitHub | 확장 프롬프트 생성기 패턴 |
 | MultiJail | https://arxiv.org/abs/2310.06474 | Korean unsafe 9.84% — ③ 코드스위칭 동기 |
 | CSRT | https://arxiv.org/abs/2406.15481 / ACL 2025 | 10개 언어 mix +46.7% — ③ 시드 21~30 직접 근거 |
 | Echo Chamber | https://arxiv.org/abs/2601.05742 | 가치 역전 persuasion → ② 반어법 무기 |

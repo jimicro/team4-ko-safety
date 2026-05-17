@@ -27,9 +27,9 @@ from graph import build_graph
 
 load_dotenv()
 
-SEEDS_PATH = Path("data/seeds.json")
+SEEDS_PATH = Path("data/seeds.json")              # 사람 작성 핵심 30개
 NORMAL_PATH = Path("data/normal_prompts.json")
-AI_SEEDS_PATH = Path("data/seeds_ai_generated.json")  # produced by scripts/generate_seeds_ai.py
+EXPANDED_PROMPTS_PATH = Path("data/expanded_prompts.json")  # produced by scripts/expand_dataset.py
 RUNS_DIR = Path("results/runs")
 RUNS_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -38,22 +38,23 @@ MAX_TURNS = 6  # 2:2:2 phase split (신뢰 구축 / 경계 탐색 / 본격 공�
 CATEGORIES = ("hierarchy", "irony", "code_switching")
 
 
-def _load_seeds() -> list[dict]:
-    seeds = json.loads(SEEDS_PATH.read_text(encoding="utf-8"))
-    if AI_SEEDS_PATH.exists():
-        seeds += json.loads(AI_SEEDS_PATH.read_text(encoding="utf-8"))
-    return seeds
+def _load_prompt_pool() -> list[dict]:
+    """시드 (사람 작성) + 확장 프롬프트 (Claude 자동 생성, 있을 때만) 통합."""
+    pool = json.loads(SEEDS_PATH.read_text(encoding="utf-8"))
+    if EXPANDED_PROMPTS_PATH.exists():
+        pool += json.loads(EXPANDED_PROMPTS_PATH.read_text(encoding="utf-8"))
+    return pool
 
 
-def _seeds_for(category: str, n: int) -> list[dict]:
-    cat_seeds = [s for s in _load_seeds() if s["category"] == category]
-    if len(cat_seeds) < n:
+def _prompts_for(category: str, n: int) -> list[dict]:
+    cat_pool = [s for s in _load_prompt_pool() if s["category"] == category]
+    if len(cat_pool) < n:
         print(
-            f"⚠ category={category} has only {len(cat_seeds)} seeds "
-            f"(need {n}). Run scripts/generate_seeds_ai.py first.",
+            f"⚠ category={category} has only {len(cat_pool)} prompts "
+            f"(need {n}). Run scripts/expand_dataset.py first.",
             file=sys.stderr,
         )
-    return cat_seeds[:n]
+    return cat_pool[:n]
 
 
 def _run_one_round(graph, init: dict) -> dict:
@@ -66,20 +67,20 @@ def run_adversarial(experiment: str, defender_mode: str = "vanilla") -> None:
     suffix = "" if defender_mode == "vanilla" else f"_{defender_mode}"
     for category in CATEGORIES:
         out_path = RUNS_DIR / f"{experiment}_{category}{suffix}.jsonl"
-        seeds = _seeds_for(category, ROUNDS_PER_CATEGORY)
+        prompts = _prompts_for(category, ROUNDS_PER_CATEGORY)
 
         with out_path.open("a", encoding="utf-8") as f:
-            for i, seed in enumerate(tqdm(seeds, desc=f"{experiment}/{category}/{defender_mode}")):
+            for i, item in enumerate(tqdm(prompts, desc=f"{experiment}/{category}/{defender_mode}")):
                 round_id = i + 1
                 init = {
                     "round_id": round_id,
                     "experiment": experiment,
                     "category": category,
-                    "origin": seed.get("origin", "ai_generated"),
-                    "seed_id": seed.get("id", i),
-                    "seed_prompt": seed["prompt"],
-                    "target_content": seed.get("target_content", seed["prompt"]),
-                    "domain": seed.get("domain", ""),
+                    "origin": item.get("origin", "expanded"),
+                    "seed_id": item.get("id", i),
+                    "seed_prompt": item["prompt"],
+                    "target_content": item.get("target_content", item["prompt"]),
+                    "domain": item.get("domain", ""),
                     "defender_mode": defender_mode,
                     "current_turn": 1,
                     "max_turns": MAX_TURNS,

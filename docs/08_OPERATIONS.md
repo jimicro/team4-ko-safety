@@ -55,8 +55,8 @@ python scripts/smoke_test.py                          # 기본 (id=1, 실험 A, 
 python scripts/smoke_test.py --max-turns 2            # 더 빠른 검증 (~30초)
 python scripts/smoke_test.py --seed-id 1 --experiment B   # 양방향 둘 다 점검
 
-# Step 2: AI 시드 생성 (1회, ~$5, ~5분)
-python scripts\generate_seeds_ai.py
+# Step 2: 확장 프롬프트 생성 (1회, ~$5, ~5분, Claude 기반)
+python scripts\expand_dataset.py
 
 # Step 3: 사전 실험 (~$15, ~40분)
 python pilot.py --mode both --experiment A
@@ -83,7 +83,7 @@ streamlit run scripts/viewer.py
 | 단계 | 시간 | 비용 |
 |---|---|---|
 | 스모크 | 1 분 | $0.05 |
-| AI 시드 생성 | 5 분 | $3~7 |
+| 확장 프롬프트 생성 | 5 분 | $3~7 |
 | 사전 실험 | 30~45 분 | $10~20 |
 | 본 실험 A | 1~1.5 시간 | $30~60 |
 | 본 실험 B | 1~1.5 시간 | $30~60 |

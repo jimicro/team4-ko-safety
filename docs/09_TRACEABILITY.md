@@ -23,7 +23,7 @@
 | FR-07 | Aggregator 피드백 누적 / 롤링 3 | §6.2 | `agents/aggregator.py:aggregator_node`, `load_recent_feedback` | 라운드 연속 실행 후 piping 확인 |
 | FR-08 | 라운드 최대 N턴, 조기 종료 | §6.1 | `graph.py:_route_after_turn` | L2 (current_turn 증가 패턴) |
 | FR-09 | JSONL 영속 저장 | §4.2 | `orchestrator.py:run_adversarial` | L4 (라인 수 일치) |
-| FR-10 | 시드 30 + AI 270 = 300 분포 | §4.2 | `data/seeds.json`, `scripts/generate_seeds_ai.py` | L3 사전 확인 |
+| FR-10 | 시드 30 + 확장 프롬프트 270 = 300 분포 | §4.2 | `data/seeds.json`, `scripts/expand_dataset.py` | L3 사전 확인 |
 | FR-11 | 정상 50건 FPR 측정 | §4.2 | `data/normal_prompts.json`, `orchestrator.py:run_normal` | L4 |
 | FR-12 | 실험 A/B 양방향 | §5.2 | `agents/llm.py:ATTACKER_FN`/`DEFENDER_FN` dict | L4 |
 | FR-13 | DSR·ASR·FPR·돌파턴·페이즈·라운드 추이 집계 | §6.2 | `analysis.py:compute_summary` | L4 (summary.json 검증) |
@@ -104,7 +104,7 @@
 | 산출물 | 만족하는 요구사항 |
 |---|---|
 | GitHub 소스 코드 | FR-01~FR-16, NFR-* |
-| `data/seeds.json` + `seeds_ai_generated.json` | FR-10, NFR-08 |
+| `data/seeds.json` + `expanded_prompts.json` | FR-10, NFR-08 |
 | `data/normal_prompts.json` | FR-11 |
 | `results/runs/*.jsonl` 600+ 행 | FR-09, FR-12 (양방향) |
 | `results/summary.json` | FR-13 |

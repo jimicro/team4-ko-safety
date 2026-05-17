@@ -13,7 +13,7 @@
 | 자산 | 종류 | 규모 | 위치 | 출처 |
 |---|---|---|---|---|
 | 사람 시드 | 입력 | 30 행 | `data/seeds.json` | 팀원 작성 |
-| AI 자율 시드 | 입력 | 270 행 | `data/seeds_ai_generated.json` | GPT-4o 생성 |
+| 확장 프롬프트 | 입력 | 270 행 | `data/expanded_prompts.json` | Claude 생성 (시드 few-shot 기반) |
 | 정상 프롬프트 | 입력 | 50 행 | `data/normal_prompts.json` | 팀원 작성 |
 | 라운드 로그 (본 실험) | 출력 | 600 행 | `results/runs/{A,B}_{cat}.jsonl` | 실험 실행 |
 | 라운드 로그 (정상) | 출력 | 100 행 | `results/runs/{A,B}_normal.jsonl` | 실험 실행 |
@@ -48,7 +48,7 @@
 |---|---|---|---|
 | id | int | ✓ | 전역 유일 |
 | category | enum | ✓ | `hierarchy` \| `irony` \| `code_switching` |
-| origin | enum | ✓ | `seed` \| `ai_generated` |
+| origin | enum | ✓ | `seed` \| `expanded` |
 | target_content | str | ✓ | Defender 가 실토하면 안 되는 정보 명세 |
 | prompt | str | ✓ | 1턴 시드 발화 |
 | domain | str | ✓ | 위험 도메인 라벨 |
@@ -57,7 +57,7 @@
 | est_asr | str | △ | 본 실험 6턴 멀티턴 기준 추정 ASR (예: "70~85%") |
 | languages | str | △ (code_switching 만) | 언어 조합 (예: "한·영", "한·중·일") |
 
-> 메타 필드 (`source_paper`, `phase_key`, `est_asr`, `languages`) 는 사람 시드에는 필수, AI 자율 생성 시드에는 선택. 본 실험 분석에서 카테고리·언어·돌파 페이즈 차원의 비교에 사용된다.
+> 메타 필드 (`source_paper`, `phase_key`, `est_asr`, `languages`) 는 사람 시드에는 필수, 확장 프롬프트에는 선택. 본 실험 분석에서 카테고리·언어·돌파 페이즈 차원의 비교에 사용된다.
 
 ### 2.2 정상 프롬프트 (normal_prompts.json)
 ```json
@@ -82,7 +82,7 @@ JSON Lines, 한 라운드 = 한 행:
   "round_id": 42,
   "experiment": "A",
   "category": "code_switching",
-  "origin": "ai_generated",
+  "origin": "expanded",
   "seed_id": 152,
   "seed_prompt": "...",
   "target_content": "...",
@@ -202,7 +202,7 @@ git 에 커밋되지 않는 파일:
 |---|---|---|
 | 소스 코드 | 공개 | MIT 또는 Apache-2.0 |
 | 사람 시드 | 공개 | CC-BY 4.0 (학술 인용) |
-| AI 자율 시드 | 공개 | CC-BY 4.0 |
+| 확장 프롬프트 | 공개 | CC-BY 4.0 |
 | 라운드 로그 | **부분 공개** | CC-BY-NC 4.0 (비상업, 학술용) |
 | 인간 어노테이션 | 공개 | CC-BY 4.0 |
 | API 키 | **절대 비공개** | — |
@@ -236,7 +236,7 @@ git 에 커밋되지 않는 파일:
 | 단계 | 점검 | 도구 |
 |---|---|---|
 | 시드 작성 후 | JSON 구문, id 유일성, 카테고리 균등 | `python -c "import json; ..."` |
-| AI 시드 생성 후 | 중복·도메인 분산·길이 필터 | `scripts/generate_seeds_ai.py` 내장 |
+| 확장 프롬프트 생성 후 | 중복·도메인 분산·길이 필터 | `scripts/expand_dataset.py` 내장 |
 | 라운드 실행 중 | error 필드 비율 < 5% | grep/jq |
 | 분석 시 | JSONL 행 수 = 예상 라운드 수 | `wc -l` |
 

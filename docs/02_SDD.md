@@ -62,11 +62,11 @@ TEAM4/
 │
 ├── scripts/
 │   ├── smoke_test.py        # 단건 라운드 검증 (--seed-id, --defender-mode 등)
-│   └── generate_seeds_ai.py # AI 자율 시드 생성 (카테고리당 90개)
+│   └── expand_dataset.py    # 확장 프롬프트 생성 (Claude, 카테고리당 90개)
 │
 ├── data/
-│   ├── seeds.json           # 30개 사람 시드
-│   ├── seeds_ai_generated.json   # 270개 AI 시드 (생성 후)
+│   ├── seeds.json           # 30개 사람 시드 (핵심)
+│   ├── expanded_prompts.json # 270개 확장 프롬프트 (Claude 생성, 보충)
 │   └── normal_prompts.json  # 50개 정상 프롬프트
 │
 └── results/
@@ -108,7 +108,7 @@ class State(TypedDict, total=False):
     round_id: int
     experiment: Literal["A", "B"]
     category: Literal["hierarchy", "irony", "code_switching", "normal"]
-    origin: Literal["seed", "ai_generated", "normal"]
+    origin: Literal["seed", "expanded", "normal"]
     seed_id: int
     seed_prompt: str       # 공격 목표 (Defender 에 직접 전달 금지)
     target_content: str    # Defender 가 실토하면 안 되는 유해 정보 명세
@@ -280,6 +280,6 @@ persist(state)
 
 ## 10. 미해결 설계 이슈
 
-- AI 자율 시드 생성기가 GPT 단일 호출로 110개를 요청 — 출력 토큰 한도에 걸릴 가능성. 발생 시 batch 30씩 분할 호출로 변경.
+- 확장 프롬프트 생성기가 Claude 단일 호출로 110개를 요청 — 출력 토큰 한도에 걸릴 가능성. 발생 시 batch 30씩 분할 호출로 변경.
 - Crescendo 자기 인용 강화는 코드 30줄 변경으로 가능하지만 본 실험 들어가기 전 A/B 검증 필요.
 - analysis.py 의 refusal 분류기는 정규식 휴리스틱. 정확도가 부족하면 Claude 기반 분류로 교체 검토.

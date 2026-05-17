@@ -1,8 +1,12 @@
-"""Generate 90 AI seeds per category from the 10 human seeds.
+"""Expand the human-written seed dataset into a supplementary prompt set.
 
-Runs once before orchestrator.py. Over-generates (~200) and filters to 90.
+시드 (seed) = 사람이 직접 작성한 핵심 30개 (data/seeds.json).
+확장 프롬프트 (expanded prompts) = 시드를 few-shot 예시로 받아 Claude 가 자동 생성한
+보충 데이터 (카테고리당 90개 × 3 = 270개). data/expanded_prompts.json 에 저장.
 
-    python scripts/generate_seeds_ai.py
+본 실험에서 두 데이터셋은 분리 보고되며, 시드만으로 라운드를 돌리는 모드도 지원된다.
+
+    python scripts/expand_dataset.py
 """
 from __future__ import annotations
 
@@ -15,13 +19,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from dotenv import load_dotenv
 
-from agents.llm import call_gpt
-from agents.prompts import CATEGORY_STRATEGY, SEED_GENERATOR_SYSTEM
+from agents.llm import call_claude
+from agents.prompts import CATEGORY_STRATEGY, EXPANSION_PROMPT_SYSTEM
 
 load_dotenv()
 
 SEEDS_PATH = Path("data/seeds.json")
-OUT_PATH = Path("data/seeds_ai_generated.json")
+OUT_PATH = Path("data/expanded_prompts.json")
 PER_CATEGORY_TARGET = 90
 OVERGEN = 110  # over-generate then dedupe
 
@@ -52,7 +56,7 @@ def main() -> None:
     for category, human in by_cat.items():
         if category not in CATEGORY_STRATEGY:
             continue
-        system = SEED_GENERATOR_SYSTEM.format(
+        system = EXPANSION_PROMPT_SYSTEM.format(
             n=OVERGEN,
             category=category,
             category_strategy=CATEGORY_STRATEGY[category],
@@ -62,8 +66,8 @@ def main() -> None:
                 indent=2,
             ),
         )
-        print(f"→ generating ~{OVERGEN} seeds for category={category} ...")
-        raw = call_gpt(system, [{"role": "user", "content": f"카테고리 '{category}' 시드 {OVERGEN}개 생성."}], temperature=1.0)
+        print(f"→ generating ~{OVERGEN} expanded prompts for category={category} ...")
+        raw = call_claude(system, [{"role": "user", "content": f"카테고리 '{category}' 확장 프롬프트 {OVERGEN}개 생성."}], temperature=1.0)
         items = _parse_array(raw)
 
         # Deduplicate by normalized prompt; keep diverse domains.
@@ -76,7 +80,7 @@ def main() -> None:
             picked.append({
                 "id": next_id,
                 "category": category,
-                "origin": "ai_generated",
+                "origin": "expanded",
                 "target_content": it.get("target_content", ""),
                 "prompt": it.get("prompt", ""),
                 "domain": it.get("domain", ""),
@@ -88,7 +92,7 @@ def main() -> None:
         out.extend(picked)
 
     OUT_PATH.write_text(json.dumps(out, ensure_ascii=False, indent=2), encoding="utf-8")
-    print(f"✓ wrote {len(out)} AI-generated seeds → {OUT_PATH}")
+    print(f"✓ wrote {len(out)} expanded prompts → {OUT_PATH}")
 
 
 if __name__ == "__main__":

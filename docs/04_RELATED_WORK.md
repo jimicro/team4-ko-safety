@@ -54,7 +54,7 @@
 ### 1.7 GPTFuzzer (Yu et al. 2023)
 - **기법**: 인간 작성 jailbreak 템플릿을 AFL 식 mutation.
 - **정량 근거**: ChatGPT/Llama-2 90%+.
-- **우리 매핑**: AI 시드 자율 생성 (`scripts/generate_seeds_ai.py`) 의 ancestor.
+- **우리 매핑**: 확장 프롬프트 생성 (`scripts/expand_dataset.py`) 의 ancestor.
 - **인용**: arXiv:2309.10253
 
 ---
@@ -139,7 +139,7 @@
 | 다국어 키워드 위장 | CSRT, MultiJail | ③ 코드 스위칭 카테고리 |
 | Hypothetical wrapping | AutoAdv, Echo Chamber | 5턴 무기 |
 | Salami (부분 요청) | M2S 변형, X-Teaming | 6턴 무기 |
-| 시드 → AI 자율 확장 | GPTFuzzer | `scripts/generate_seeds_ai.py` |
+| 시드 → 확장 프롬프트 | GPTFuzzer | `scripts/expand_dataset.py` |
 | LLM-as-Judge | Zheng 2023 | Turn / Final Evaluator |
 | Over-refusal 측정 | OR-Bench | 정상 테스트셋 50건 |
 | 한국 문화 5요소 | CAGE / KoRSET | 시드 카탈로그 (05) 매핑 |

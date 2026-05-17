@@ -11,7 +11,7 @@ from __future__ import annotations
 from typing import Annotated, Literal, Optional, TypedDict
 
 Category = Literal["hierarchy", "irony", "code_switching", "normal"]
-Origin = Literal["seed", "ai_generated", "normal"]
+Origin = Literal["seed", "expanded", "normal"]
 Experiment = Literal["A", "B"]
 TurnJudgment = Literal["계속", "실패"]
 DefenderMode = Literal["vanilla", "safe", "aware"]

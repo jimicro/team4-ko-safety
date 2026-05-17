@@ -17,7 +17,7 @@
 |---|---|---|---|---|
 | T1 | AST 정합성 | `python -m ast` (내장) | L1 | 모든 .py 의 구문 검증 |
 | T2 | 단건 스모크 | `scripts/smoke_test.py` | L2 | 1 라운드 end-to-end |
-| T3 | AI 시드 생성 | `scripts/generate_seeds_ai.py` | (preparation) | 사람 30 → AI 270 시드 |
+| T3 | 확장 프롬프트 생성 | `scripts/expand_dataset.py` | (preparation) | 사람 시드 30 → 확장 프롬프트 270 (Claude) |
 | T4 | 사전 실험 | `pilot.py` | L3 | 멀티턴 효과·최적 턴 수 |
 | T5 | 본 실험 | `orchestrator.py` | L4 | 700라운드 DSR/ASR/FPR |
 | T6 | 분석 | `analysis.py` | (post) | 차트 5종 + summary.json |
@@ -167,19 +167,20 @@ python scripts/smoke_test.py --no-dialogue
 
 ---
 
-## 4. T3 — AI 시드 생성 (Preparation)
+## 4. T3 — 확장 프롬프트 생성 (Preparation)
 
 ### 4.1 파일
-- `scripts/generate_seeds_ai.py`
-- 입력: `data/seeds.json` (사람 30개)
-- 출력: `data/seeds_ai_generated.json` (AI 270개, 카테고리당 90개)
+- `scripts/expand_dataset.py`
+- 입력: `data/seeds.json` (사람 시드 30개)
+- 출력: `data/expanded_prompts.json` (확장 프롬프트 270개, 카테고리당 90개)
+- 생성 모델: Claude (Sonnet 4.6) — 실험 Attacker (GPT/Gemini) 와 다른 회사 모델 사용
 
 ### 4.2 CLI 옵션
 현재 옵션 없음. 환경변수로만 제어:
 | 환경변수 | 기본값 | 의미 |
 |---|---|---|
-| `OPENAI_API_KEY` | (필수) | GPT-4o 호출용 |
-| `GPT_MODEL` | `gpt-4o` | 생성 모델 변경 시 |
+| `ANTHROPIC_API_KEY` | (필수) | Claude 호출용 |
+| `CLAUDE_MODEL` | `claude-sonnet-4-6` | 생성 모델 변경 시 |
 
 내부 상수 (스크립트 상단 수정 가능):
 - `PER_CATEGORY_TARGET = 90` (선별 후 채택 수)
@@ -188,16 +189,16 @@ python scripts/smoke_test.py --no-dialogue
 ### 4.3 표준 예시
 ```powershell
 # 본 실험 직전 1회만 실행 (~5분, ~$3~7)
-python scripts/generate_seeds_ai.py
+python scripts/expand_dataset.py
 ```
 
 ### 4.4 통과 기준
-- `data/seeds_ai_generated.json` 가 생성되어야 함
+- `data/expanded_prompts.json` 가 생성되어야 함
 - 카테고리당 ≥ 60개 채택 (목표 90 미달 시 over-generation 횟수 늘려 재실행)
 - 팀원 무작위 20개 샘플 검수 통과율 ≥ 90% (카테고리 정체성·target_content 명확성·실명 미포함)
 
 ### 4.5 결과 파일 스키마
-[06_DATA_MANAGEMENT.md §2.1](06_DATA_MANAGEMENT.md) 와 동일 (사람 시드와 같은 필드 + `origin: "ai_generated"`).
+[06_DATA_MANAGEMENT.md §2.1](06_DATA_MANAGEMENT.md) 와 동일 (사람 시드와 같은 필드 + `origin: "expanded"`).
 
 ---
 
@@ -292,8 +293,8 @@ python pilot.py --mode both --experiment A --defender-mode aware
 ### 6.4 표준 예시 — 본 실험 (Vanilla, 기본 모드)
 
 ```powershell
-# 사전 (1회만): AI 시드 270개 생성
-python scripts/generate_seeds_ai.py
+# 사전 (1회만): 확장 프롬프트 270개 생성 (Claude)
+python scripts/expand_dataset.py
 
 # 적대적 실험 (각 ~1~1.5h, ~$30~60)
 python orchestrator.py --experiment A
@@ -473,7 +474,7 @@ streamlit run scripts/viewer.py --server.headless true --server.port 8765
 
 | 산출물 | 위치 | 생성 도구 |
 |---|---|---|
-| AI 자율 시드 | `data/seeds_ai_generated.json` | T3 |
+| 확장 프롬프트 | `data/expanded_prompts.json` | T3 |
 | 단건 스모크 결과 | `results/smoke/*.json` (--save 시) | T2 |
 | Pilot 결과 | `results/pilot_*.jsonl` | T4 |
 | 본 실험 라운드 로그 | `results/runs/*.jsonl` | T5 |
