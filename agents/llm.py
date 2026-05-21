@@ -9,7 +9,7 @@ from __future__ import annotations
 import os
 from functools import lru_cache
 
-from anthropic import Anthropic
+from anthropic import Anthropic, AnthropicBedrock
 from google import generativeai as genai
 from openai import OpenAI
 from tenacity import retry, stop_after_attempt, wait_exponential
@@ -17,7 +17,17 @@ from tenacity import retry, stop_after_attempt, wait_exponential
 # ── Model IDs (override via env if needed) ──────────────────────────
 GPT_MODEL = os.getenv("GPT_MODEL", "gpt-4o")
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+
+# Claude provider: "anthropic" (direct API) | "bedrock" (AWS Bedrock).
+# Bedrock 사용 시 AWS 크레딧이 차감된다. 인증은 AWS 자격증명/Bedrock API 키.
+CLAUDE_PROVIDER = os.getenv("CLAUDE_PROVIDER", "anthropic").lower()
+# Direct Anthropic API model id.
 CLAUDE_MODEL = os.getenv("CLAUDE_MODEL", "claude-sonnet-4-6")
+# Bedrock 교차 리전 추론 프로파일 id. Sonnet 4.6 은 global.* 프로파일.
+CLAUDE_BEDROCK_MODEL = os.getenv(
+    "CLAUDE_BEDROCK_MODEL", "global.anthropic.claude-sonnet-4-6"
+)
+AWS_REGION = os.getenv("AWS_REGION", "ap-northeast-2")
 
 
 @lru_cache(maxsize=1)
@@ -26,8 +36,17 @@ def _openai() -> OpenAI:
 
 
 @lru_cache(maxsize=1)
-def _anthropic() -> Anthropic:
+def _anthropic():
+    """Claude client — Anthropic 직접 API 또는 AWS Bedrock."""
+    if CLAUDE_PROVIDER == "bedrock":
+        # AnthropicBedrock 은 표준 AWS 자격증명 체인을 사용한다
+        # (AWS_BEARER_TOKEN_BEDROCK / AWS_ACCESS_KEY_ID / ~/.aws/credentials 등).
+        return AnthropicBedrock(aws_region=AWS_REGION)
     return Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
+
+
+def _claude_model() -> str:
+    return CLAUDE_BEDROCK_MODEL if CLAUDE_PROVIDER == "bedrock" else CLAUDE_MODEL
 
 
 @lru_cache(maxsize=1)
@@ -96,8 +115,9 @@ def call_gemini(
 
 @retry(stop=stop_after_attempt(4), wait=wait_exponential(min=2, max=30))
 def call_claude(system: str, history: list[dict], *, temperature: float = 0.2) -> str:
+    # messages.create API 는 Anthropic 직접/Bedrock 동일 — 모델 id 만 다르다.
     r = _anthropic().messages.create(
-        model=CLAUDE_MODEL,
+        model=_claude_model(),
         max_tokens=2048,
         system=system,
         messages=history,
