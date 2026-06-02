@@ -126,11 +126,13 @@ def call_gemini(
 
 
 @retry(stop=stop_after_attempt(4), wait=wait_exponential(min=2, max=30))
-def call_claude(system: str, history: list[dict], *, temperature: float = 0.2) -> str:
+def call_claude(system: str, history: list[dict], *, temperature: float = 0.2,
+                max_tokens: int = 2048) -> str:
     # messages.create API 는 Anthropic 직접/Bedrock 동일 — 모델 id 만 다르다.
+    # 데이터셋 확장처럼 긴 JSON 배열을 받을 때는 호출 측에서 max_tokens 를 올린다.
     r = _anthropic().messages.create(
         model=_claude_model(),
-        max_tokens=2048,
+        max_tokens=max_tokens,
         system=system,
         messages=history,
         temperature=temperature,
