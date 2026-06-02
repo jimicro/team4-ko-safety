@@ -133,7 +133,11 @@ def main():
                     help="Defender 프롬프트 변형 (기본 vanilla. aware = ablation 비교용)")
     args = ap.parse_args()
 
-    required = ["OPENAI_API_KEY", "GOOGLE_API_KEY", "ANTHROPIC_API_KEY"]
+    claude_provider = os.getenv("CLAUDE_PROVIDER", "anthropic").lower()
+    claude_key = (
+        "AWS_BEARER_TOKEN_BEDROCK" if claude_provider == "bedrock" else "ANTHROPIC_API_KEY"
+    )
+    required = ["OPENAI_API_KEY", "GOOGLE_API_KEY", claude_key]
     missing = [k for k in required if not os.getenv(k)]
     if missing:
         print(f"Missing env vars: {missing}", file=sys.stderr)

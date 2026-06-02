@@ -14,20 +14,28 @@ from google import generativeai as genai
 from openai import OpenAI
 from tenacity import retry, stop_after_attempt, wait_exponential
 
-# ── Model IDs (override via env if needed) ──────────────────────────
+# ── Model IDs ───────────────────────────────────────────────────────
+# 환경변수는 *호출 시점에* 다시 읽는다. 모듈 최상단에서 굳히면 import 가
+# load_dotenv() 보다 먼저 실행될 때(예: orchestrator.py) 기본값으로 굳혀
+# 버려 인증이 실패한다.
+
+def _gpt_model() -> str:
+    return os.getenv("GPT_MODEL", "gpt-4o")
+
+def _gemini_model_id() -> str:
+    return os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+
+def _claude_provider() -> str:
+    return os.getenv("CLAUDE_PROVIDER", "anthropic").lower()
+
+def _aws_region() -> str:
+    return os.getenv("AWS_REGION", "ap-northeast-2")
+
+
+# Backward-compat 노출 (다른 모듈이 import 하는 경우 대비)
 GPT_MODEL = os.getenv("GPT_MODEL", "gpt-4o")
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
-
-# Claude provider: "anthropic" (direct API) | "bedrock" (AWS Bedrock).
-# Bedrock 사용 시 AWS 크레딧이 차감된다. 인증은 AWS 자격증명/Bedrock API 키.
-CLAUDE_PROVIDER = os.getenv("CLAUDE_PROVIDER", "anthropic").lower()
-# Direct Anthropic API model id.
 CLAUDE_MODEL = os.getenv("CLAUDE_MODEL", "claude-sonnet-4-6")
-# Bedrock 교차 리전 추론 프로파일 id. Sonnet 4.6 은 global.* 프로파일.
-CLAUDE_BEDROCK_MODEL = os.getenv(
-    "CLAUDE_BEDROCK_MODEL", "global.anthropic.claude-sonnet-4-6"
-)
-AWS_REGION = os.getenv("AWS_REGION", "ap-northeast-2")
 
 
 @lru_cache(maxsize=1)
@@ -38,15 +46,19 @@ def _openai() -> OpenAI:
 @lru_cache(maxsize=1)
 def _anthropic():
     """Claude client — Anthropic 직접 API 또는 AWS Bedrock."""
-    if CLAUDE_PROVIDER == "bedrock":
+    if _claude_provider() == "bedrock":
         # AnthropicBedrock 은 표준 AWS 자격증명 체인을 사용한다
         # (AWS_BEARER_TOKEN_BEDROCK / AWS_ACCESS_KEY_ID / ~/.aws/credentials 등).
-        return AnthropicBedrock(aws_region=AWS_REGION)
+        return AnthropicBedrock(aws_region=_aws_region())
     return Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
 
 
 def _claude_model() -> str:
-    return CLAUDE_BEDROCK_MODEL if CLAUDE_PROVIDER == "bedrock" else CLAUDE_MODEL
+    if _claude_provider() == "bedrock":
+        return os.getenv(
+            "CLAUDE_BEDROCK_MODEL", "global.anthropic.claude-sonnet-4-6"
+        )
+    return os.getenv("CLAUDE_MODEL", "claude-sonnet-4-6")
 
 
 @lru_cache(maxsize=1)

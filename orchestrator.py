@@ -37,6 +37,10 @@ ROUNDS_PER_CATEGORY = 100
 MAX_TURNS = 6  # 2:2:2 phase split (신뢰 구축 / 경계 탐색 / 본격 공격)
 CATEGORIES = ("hierarchy", "irony", "code_switching")
 
+# --test 모드 — 본 실험 전 빠른 점검용. 결과는 동일 경로에 append.
+TEST_ROUNDS_PER_CATEGORY = 2
+TEST_NORMAL_PROMPTS = 2
+
 
 def _load_prompt_pool() -> list[dict]:
     """시드 (사람 작성) + 확장 프롬프트 (Claude 자동 생성, 있을 때만) 통합."""
@@ -61,13 +65,14 @@ def _run_one_round(graph, init: dict) -> dict:
     return graph.invoke(init, {"recursion_limit": 60})
 
 
-def run_adversarial(experiment: str, defender_mode: str = "vanilla") -> None:
+def run_adversarial(experiment: str, defender_mode: str = "vanilla", *, test: bool = False) -> None:
     graph = build_graph()
     # 결과 파일명에 defender_mode 포함 → vanilla/aware 모두 같은 폴더에 공존 가능
     suffix = "" if defender_mode == "vanilla" else f"_{defender_mode}"
+    rounds_per_cat = TEST_ROUNDS_PER_CATEGORY if test else ROUNDS_PER_CATEGORY
     for category in CATEGORIES:
         out_path = RUNS_DIR / f"{experiment}_{category}{suffix}.jsonl"
-        prompts = _prompts_for(category, ROUNDS_PER_CATEGORY)
+        prompts = _prompts_for(category, rounds_per_cat)
 
         with out_path.open("a", encoding="utf-8") as f:
             for i, item in enumerate(tqdm(prompts, desc=f"{experiment}/{category}/{defender_mode}")):
@@ -97,7 +102,7 @@ def run_adversarial(experiment: str, defender_mode: str = "vanilla") -> None:
                 f.flush()
 
 
-def run_normal(experiment: str, defender_mode: str = "vanilla") -> None:
+def run_normal(experiment: str, defender_mode: str = "vanilla", *, test: bool = False) -> None:
     """FPR test — Defender alone faces normal prompts.
 
     No multi-turn, no Attacker, no Evaluator JSON judgment: we just record the
@@ -106,6 +111,8 @@ def run_normal(experiment: str, defender_mode: str = "vanilla") -> None:
     suffix = "" if defender_mode == "vanilla" else f"_{defender_mode}"
     out_path = RUNS_DIR / f"{experiment}_normal{suffix}.jsonl"
     prompts = json.loads(NORMAL_PATH.read_text(encoding="utf-8"))
+    if test:
+        prompts = prompts[:TEST_NORMAL_PROMPTS]
     fn = DEFENDER_FN[experiment]
     system = DEFENDER_VARIANTS[defender_mode]
 
@@ -137,18 +144,26 @@ def main():
                     help="Defender 프롬프트 변형 (기본 vanilla — 본 실험 객관적 측정용. "
                          "aware = 우리 카테고리 인지, ablation 비교용. "
                          "결과는 results/runs/{exp}_{cat}[_mode].jsonl 로 분리 저장)")
+    ap.add_argument("--test", action="store_true",
+                    help=f"본 실험 전 빠른 점검 모드. 적대적은 카테고리당 "
+                         f"{TEST_ROUNDS_PER_CATEGORY}건, 정상은 {TEST_NORMAL_PROMPTS}건만 실행.")
     args = ap.parse_args()
 
-    required = ["OPENAI_API_KEY", "GOOGLE_API_KEY", "ANTHROPIC_API_KEY"]
+    # Claude 는 CLAUDE_PROVIDER 에 따라 키 종류가 다르다.
+    claude_provider = os.getenv("CLAUDE_PROVIDER", "anthropic").lower()
+    claude_key = (
+        "AWS_BEARER_TOKEN_BEDROCK" if claude_provider == "bedrock" else "ANTHROPIC_API_KEY"
+    )
+    required = ["OPENAI_API_KEY", "GOOGLE_API_KEY", claude_key]
     missing = [k for k in required if not os.getenv(k)]
     if missing:
         print(f"Missing env vars: {missing}. Copy .env.example to .env and fill in.", file=sys.stderr)
         sys.exit(1)
 
     if args.normal:
-        run_normal(args.experiment, args.defender_mode)
+        run_normal(args.experiment, args.defender_mode, test=args.test)
     else:
-        run_adversarial(args.experiment, args.defender_mode)
+        run_adversarial(args.experiment, args.defender_mode, test=args.test)
 
 
 if __name__ == "__main__":
